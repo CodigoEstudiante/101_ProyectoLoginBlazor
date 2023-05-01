@@ -1,0 +1,57 @@
+﻿@page "/"
+@layout LoginLayout
+
+
+@inject HttpClient httpClient
+@using BlazorLogin.Client.Extensiones
+@using BlazorLogin.Shared
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider autenticacionProvider
+@inject NavigationManager navManager
+
+
+
+<div class="row mt-5">
+
+    <div class="col-lg-4 offset-lg-4 border">
+
+        <div class="mb-3 text-center">
+            <h3>LOGIN</h3>
+        </div>
+
+        <div class="mb-3">
+            <label>Correo</label>
+            <input @bind="login.Correo" class="form-control" />
+        </div>
+
+        <div class="mb-3">
+            <label>Contraseña</label>
+            <input @bind="login.Clave" class="form-control" />
+        </div>
+
+        <div class="mb-3">
+            <button @onclick="IniciarSesion" class="btn btn-primary">Login</button>
+        </div>
+
+    </div>
+
+</div>
+
+
+@code {
+    private LoginDTO login = new LoginDTO();
+
+    private async Task IniciarSesion()
+    {
+        var loginResponse = await httpClient.PostAsJsonAsync<LoginDTO>("/api/Usuario/Login", login);
+        if (loginResponse.IsSuccessStatusCode)
+        {
+            var sesionUsuario = await loginResponse.Content.ReadFromJsonAsync<SesionDTO>();
+            var autenticacionExt = (AutenticacionExtension)autenticacionProvider;
+            await autenticacionExt.ActualizarEstadoAutenticacion(sesionUsuario);
+
+            navManager.NavigateTo("/Index");
+        }
+    }
+
+}
